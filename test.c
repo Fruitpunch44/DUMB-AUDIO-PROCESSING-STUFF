@@ -1,6 +1,8 @@
-#include "wav_data.h"
+#include "audio_device.h"
 
 // to do add a function to read the file bytes
+WAV_HEADER MY_WAV;
+HWAVEOUT hwaveout_device;
 
 void *read_pcm_data(WAV_HEADER *headers,char *filename){
     FILE *fp = fopen(filename,"rb");
@@ -19,7 +21,6 @@ void *read_pcm_data(WAV_HEADER *headers,char *filename){
 }
 
 void check_some(char *filename){
-    WAV_HEADER MY_WAV;
     FILE *fp = fopen(filename,"rb");
     if(!fp){
         fprintf(stderr,"unable to open file");
@@ -59,17 +60,27 @@ void check_some(char *filename){
     fprintf(stdout, "BitsPersample %u\n", MY_WAV.BitsPersample);
     fprintf(stdout, "sub_chunk_id2 %s\n", MY_WAV.sub_chunk_id2);
     fprintf(stdout, "sub_chunk2_size %u\n", MY_WAV.sub_chunk2_size);
-
     read_pcm_data(&MY_WAV,filename);
+
+
 }
 
 
 int main(int argc, char *argv[]){
+    LPSTR block; //POINTER TO THE AUDIO BLOCK
+    uint16_t block_size;//SIZE OF THE AUDIO BLOCK
     if(argc < 2){
         fprintf(stderr,"Usage: %s <filename>\n",argv[0]);
         return 1;
     }
+    if((block = load_audio_block(argv[1],&block_size)) == NULL){
+        fprintf(stderr,"unable to load audio block\n");
+        return 1;
+    }
     check_some(argv[1]);
+    open_audio_dev(&MY_WAV);
+    write_audioblock(hwaveout_device,block,block_size);
+    
 
     return 0;
 }
