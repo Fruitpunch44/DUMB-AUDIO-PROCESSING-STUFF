@@ -68,7 +68,7 @@ void check_some(char *filename){
 
 int main(int argc, char *argv[]){
     LPSTR block; //POINTER TO THE AUDIO BLOCK
-    uint16_t block_size;//SIZE OF THE AUDIO BLOCK
+    size_t block_size;//SIZE OF THE AUDIO BLOCK
     if(argc < 2){
         fprintf(stderr,"Usage: %s <filename>\n",argv[0]);
         return 1;

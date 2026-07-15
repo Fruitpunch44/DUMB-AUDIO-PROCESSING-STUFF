@@ -37,11 +37,10 @@ void open_audio_dev(WAV_HEADER *info){
     }
     else{
         fprintf(stdout,"wave mapper device was opened success\n");
-        waveOutClose(hwaveout_device);
     }
 }
 
-void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,uint16_t size){
+void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,size_t size){
     //INIT OUR WAVHEADER
     WAVEHDR header;
     MMRESULT result;//return val of waveout
@@ -49,20 +48,20 @@ void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,uint16_t size){
     header.dwBufferLength =size;
     header.lpData =blocks;
     result = waveOutPrepareHeader(audio_dev,&header,sizeof(header));
-    waveout_error_codes(result);
+    fprintf(stdout,"Error code: %s\n", waveout_error_codes(result));
     if(waveOutPrepareHeader(audio_dev,&header,sizeof(header)) != MMSYSERR_NOERROR){
         fprintf(stderr,"unable to prepare  waveform audio block");
         return;
     }
     waveOutWrite(audio_dev,&header,sizeof(header));
-    Sleep(500);
+    Sleep(5000);
 
     while(waveOutUnprepareHeader(audio_dev,&header,sizeof(header)) == WAVERR_STILLPLAYING){
         Sleep(100);
     }
 }
 
-LPSTR load_audio_block(char *filename,uint16_t *block_size){
+LPSTR load_audio_block(char *filename,size_t *block_size){
     FILE *fp = fopen(filename,"rb");
     if(!fp){
         fprintf(stderr,"unable to open file");
