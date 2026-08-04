@@ -1,5 +1,10 @@
 #include"audio_device.h"
+#include"keyboard.h"
 #include<stdint.h>
+
+DWORD default_auido = 65535;//start with max volume
+#define KEY_UP 256 + 72
+#define KEY_DOWN 256 + 80
 
 char *waveout_error_codes(unsigned int CODE){
     switch (CODE)
@@ -19,6 +24,60 @@ char *waveout_error_codes(unsigned int CODE){
     default:
         return "INVALID ERROR CODE";
         break;
+    }
+}
+
+void pause_playback(HWAVEOUT auido_device){
+
+    if(waveOutPause(auido_device)!=MMSYSERR_NOERROR){
+        fprintf(stderr,"unable to pause");
+        return;
+    }
+}
+
+void resume_playback(HWAVEOUT auido_device){
+    if(waveOutRestart(auido_device)!=MMSYSERR_NOERROR){
+        fprintf(stderr,"unable to resume");
+        return;
+    }
+}
+
+//check for keyboard input and return the key code
+int get_code(){
+    int ch = _getch();
+    if(ch == 0 || ch ==224){
+        ch = 256 + _getch();
+    }
+    return ch;
+}
+void volume_control(HWAVEOUT audio_device,int option){
+    switch(option){
+        case KEY_UP:
+            DWORD volume_inc = 1000;
+            default_auido += volume_inc;
+            if(default_auido>65535){
+                fprintf(stdout,"already at max\n");
+                return;
+            }
+            if(waveOutSetVolume(audio_device,default_auido)!=MMSYSERR_NOERROR){
+                fprintf(stderr,"unable to set volume\n");
+                return;
+            }
+            fprintf(stdout,"current vol %d\n",default_auido);
+            break;
+        case KEY_DOWN:
+         DWORD volume_dec = 1000;
+            default_auido -= volume_dec;
+            if(default_auido<0){
+                fprintf(stdout,"already at min\n");
+                return;
+            }
+            if(waveOutSetVolume(audio_device,default_auido)!=MMSYSERR_NOERROR){
+                fprintf(stderr,"unable to set volume\n");
+                return;
+            }
+            fprintf(stdout,"current vol %d\n",default_auido);
+            break;
     }
 }
 
@@ -46,7 +105,7 @@ void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,size_t size){
     MMRESULT result;//return val of waveout
     ZeroMemory(&header,sizeof(header));
     header.dwBufferLength =size;
-    header.lpData =blocks;
+    header.lpData = blocks;
     result = waveOutPrepareHeader(audio_dev,&header,sizeof(header));
     fprintf(stdout,"Error code: %s\n", waveout_error_codes(result));
     if(waveOutPrepareHeader(audio_dev,&header,sizeof(header)) != MMSYSERR_NOERROR){
@@ -54,7 +113,38 @@ void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,size_t size){
         return;
     }
     waveOutWrite(audio_dev,&header,sizeof(header));
-    Sleep(5000);
+        while(1){
+        if(_kbhit()){
+            int ch = get_code();
+            playback_keys check = ch;
+            switch(check){
+                case PAUSE:
+                    pause_playback(hwaveout_device);
+                    fprintf(stdout,"playback paused\n");
+                    break;
+                case RESUME:
+                    resume_playback(hwaveout_device);
+                    fprintf(stdout,"playback resumed\n");
+                    break;
+                case STOP:
+                    waveOutReset(hwaveout_device);
+                    fprintf(stdout,"playback stopped\n");
+                    return;
+                case KEY_DOWN:
+                    fprintf(stdout,"DOWN button %d\n", check);
+                    volume_control(audio_dev,check);
+                    break;
+                case KEY_UP:
+                    fprintf(stdout,"UP button %d\n", check);
+                    volume_control(audio_dev,check);
+                    break;
+                default:
+                    fprintf(stdout,"invalid command %d\n",check);
+            }
+        }
+        Sleep(50);
+    }
+    Sleep(500);
 
     while(waveOutUnprepareHeader(audio_dev,&header,sizeof(header)) == WAVERR_STILLPLAYING){
         Sleep(100);

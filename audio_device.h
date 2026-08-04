@@ -11,5 +11,8 @@ void open_audio_dev(WAV_HEADER *info);
 void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,size_t size);
 LPSTR load_audio_block(char *filename,size_t *block_size);
 char *waveout_error_codes(unsigned int Code);
-
+void pause_playback(HWAVEOUT audio_device);
+void resume_playback(HWAVEOUT audio_device);
+int get_code();
+void volume_control(HWAVEOUT audio_device,int option);
 #endif

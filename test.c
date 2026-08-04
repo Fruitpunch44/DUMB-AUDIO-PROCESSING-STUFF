@@ -1,5 +1,4 @@
 #include "audio_device.h"
-
 // to do add a function to read the file bytes
 WAV_HEADER MY_WAV;
 HWAVEOUT hwaveout_device;
@@ -80,7 +79,5 @@ int main(int argc, char *argv[]){
     check_some(argv[1]);
     open_audio_dev(&MY_WAV);
     write_audioblock(hwaveout_device,block,block_size);
-    
-
     return 0;
 }
