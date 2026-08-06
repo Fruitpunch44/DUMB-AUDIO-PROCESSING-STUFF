@@ -15,4 +15,6 @@ void pause_playback(HWAVEOUT audio_device);
 void resume_playback(HWAVEOUT audio_device);
 int get_code();
 void volume_control(HWAVEOUT audio_device,int option);
+uint32_t return_both_channels(uint16_t low,uint16_t high);
+float display_vol_percent(uint16_t packed_value);
 #endif

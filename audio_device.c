@@ -1,8 +1,16 @@
 #include"audio_device.h"
 #include"keyboard.h"
 #include<stdint.h>
+#include<minwindef.h>
 
-DWORD default_auido = 65535;//start with max volume
+//add reload functionality
+//incoporate other audio formats mp3 
+
+#define MAX_VOLUME 0xFFFF
+#define MIN_VOLUME 0x0000
+uint16_t default_audio_left = 0;//start with zero volume
+uint16_t default_audio_right = 0;//start with zero volume
+
 #define KEY_UP 256 + 72
 #define KEY_DOWN 256 + 80
 
@@ -25,6 +33,9 @@ char *waveout_error_codes(unsigned int CODE){
         return "INVALID ERROR CODE";
         break;
     }
+}
+float display_vol_percent(uint16_t packed_value){
+    return (((float)packed_value*100.0f/65535.0f));
 }
 
 void pause_playback(HWAVEOUT auido_device){
@@ -50,33 +61,45 @@ int get_code(){
     }
     return ch;
 }
+uint32_t return_both_channels(uint16_t low,uint16_t high){
+    return (uint32_t)low | ((uint32_t)high << 16);
+}
+
 void volume_control(HWAVEOUT audio_device,int option){
     switch(option){
         case KEY_UP:
-            DWORD volume_inc = 1000;
-            default_auido += volume_inc;
-            if(default_auido>65535){
+            DWORD volume_inc = 1024;
+            default_audio_left += volume_inc;
+            default_audio_right +=volume_inc;
+            uint32_t chan_volume_inc = return_both_channels(default_audio_left,default_audio_right);
+            if( default_audio_right > MAX_VOLUME || default_audio_left >MAX_VOLUME){
                 fprintf(stdout,"already at max\n");
-                return;
+                break;
             }
-            if(waveOutSetVolume(audio_device,default_auido)!=MMSYSERR_NOERROR){
+            if(waveOutSetVolume(audio_device,chan_volume_inc)!=MMSYSERR_NOERROR){
                 fprintf(stderr,"unable to set volume\n");
                 return;
             }
-            fprintf(stdout,"current vol %d\n",default_auido);
+            fprintf(stdout,"current vol left %f\n",display_vol_percent(default_audio_left));
+            fprintf(stdout,"current vol right %f\n",display_vol_percent(default_audio_right));
+
             break;
         case KEY_DOWN:
-         DWORD volume_dec = 1000;
-            default_auido -= volume_dec;
-            if(default_auido<0){
+         DWORD volume_dec = 1024;
+            default_audio_left -= volume_dec;
+            default_audio_right -=volume_dec;
+            uint32_t chan_volume_dec = return_both_channels(default_audio_left,default_audio_right);
+            if( default_audio_right == MIN_VOLUME || default_audio_left == MIN_VOLUME){
                 fprintf(stdout,"already at min\n");
-                return;
+                break;
             }
-            if(waveOutSetVolume(audio_device,default_auido)!=MMSYSERR_NOERROR){
+            if(waveOutSetVolume(audio_device,chan_volume_dec)!=MMSYSERR_NOERROR){
                 fprintf(stderr,"unable to set volume\n");
                 return;
             }
-            fprintf(stdout,"current vol %d\n",default_auido);
+            fprintf(stdout,"current vol left %f\n",display_vol_percent(default_audio_left));
+            fprintf(stdout,"current vol  right%f\n",display_vol_percent(default_audio_right));
+
             break;
     }
 }
@@ -108,7 +131,7 @@ void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,size_t size){
     header.lpData = blocks;
     result = waveOutPrepareHeader(audio_dev,&header,sizeof(header));
     fprintf(stdout,"Error code: %s\n", waveout_error_codes(result));
-    if(waveOutPrepareHeader(audio_dev,&header,sizeof(header)) != MMSYSERR_NOERROR){
+    if(result != MMSYSERR_NOERROR){
         fprintf(stderr,"unable to prepare  waveform audio block");
         return;
     }
@@ -142,7 +165,6 @@ void write_audioblock(HWAVEOUT audio_dev,LPSTR blocks,size_t size){
                     fprintf(stdout,"invalid command %d\n",check);
             }
         }
-        Sleep(50);
     }
     Sleep(500);
 
