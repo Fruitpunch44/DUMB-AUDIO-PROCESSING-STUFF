@@ -4,6 +4,7 @@
 int main()
 {
     const int screenWidth = 800;
+    Music music = LoadMusicStream("resources/audio.wav");
     const int screenHeight = 450;
   
     InitWindow(screenWidth, screenHeight, "raylib wip - audio visualizer");

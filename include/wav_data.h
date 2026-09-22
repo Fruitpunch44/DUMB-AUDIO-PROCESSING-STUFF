@@ -32,7 +32,7 @@ typedef struct {
 }WAV_HEADER;
 
 void check_some(char *file);
-void *read_pcm_data(WAV_HEADER *headers,char *filename);
+int16_t *read_pcm_data(WAV_HEADER *headers,char *filename);
 
 
 #endif
