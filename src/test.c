@@ -32,6 +32,8 @@ void handle_samples(size_t num_samples,int16_t *samples){
     }
     wrapper_fft(float_sample_buff,num_samples);
     print_fft_values_samples(float_sample_buff,100);//print the first 100 fft values
+    get_magnitude(float_sample_buff,100);
+
     free(float_sample_buff);
 }
 

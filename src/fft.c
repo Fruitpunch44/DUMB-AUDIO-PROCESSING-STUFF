@@ -53,4 +53,12 @@ float get_amplitude(float complex z){
         return b;
 }
 }
-
+void get_magnitude(float complex z[],size_t num){
+    float mag [num];
+       for(size_t i = 0;i<num;i++){
+            float real = fabs(creal(z[i]));
+            float img = fabs(cimag(z[i]));
+            mag[i] = sqrt(real*real + img*img);
+            printf("[%zu]mag vals %2f\n",i,mag[i]);
+    }
+    }

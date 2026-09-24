@@ -18,5 +18,6 @@ typedef struct {
 /*what is this discrte fourier tra*/
 void fft(float complex in[], size_t num_samples, size_t stride, float complex out[]);
 void wrapper_fft(float complex buff[],size_t n);
+void get_magnitude(float complex z[] ,size_t num);
 
 
